@@ -1,0 +1,155 @@
+# ViralFlip Dataset Registry
+# ==========================
+# This file documents publicly available datasets for each modality.
+# Access may be gated - check each URL for access requirements.
+
+cough_voice:
+  coughvid:
+    name: "COUGHVID"
+    url: "https://zenodo.org/records/7024894"
+    description: "Crowdsourced cough audio with COVID status metadata"
+    modalities: ["cough"]
+    access: "open"
+    
+  coswara:
+    name: "Coswara"
+    url: "https://zenodo.org/records/7188627"
+    github: "https://github.com/iiscleap/Coswara-Data"
+    description: "Cough/breath/voice with symptoms and SARS-CoV-2 labels"
+    modalities: ["cough", "breath", "voice"]
+    access: "open"
+    
+  covid19_sounds:
+    name: "COVID-19 Sounds"
+    url: "https://www.covid-19-sounds.org/"
+    paper: "https://datasets-benchmarks-proceedings.neurips.cc/paper/2021/file/e2c0be24560d78c5e599c2a9c9d0bbd2-Paper-round2.pdf"
+    description: "Large-scale cough/breath/voice with self-reported COVID status"
+    modalities: ["cough", "breath", "voice"]
+    access: "registration_required"
+    
+  uk_covid_vocal:
+    name: "UK COVID-19 Vocal Audio Dataset"
+    url: "https://zenodo.org/records/10043978"
+    paper: "https://www.nature.com/articles/s41597-024-03492-w"
+    description: "Cough/exhale/speech with PCR-referenced labels"
+    modalities: ["cough", "speech", "exhale"]
+    access: "open"
+    
+  icbhi_2017:
+    name: "ICBHI 2017 Respiratory Sound Database"
+    url: "https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/HT6PKI"
+    description: "Lung sounds for respiratory acoustics (non-smartphone)"
+    modalities: ["respiratory"]
+    access: "open"
+    
+  esc50:
+    name: "ESC-50"
+    url: "https://github.com/karolpiczak/ESC-50"
+    description: "Environmental Sound Classification with coughing class"
+    modalities: ["environmental_audio"]
+    access: "open"
+
+rppg:
+  ubfc_rppg:
+    name: "UBFC-rPPG"
+    url: "https://sites.google.com/view/ybenezeth/ubfcrppg"
+    description: "RGB face video with pulse oximeter ground truth"
+    modalities: ["rppg"]
+    access: "request_required"
+    
+  pure:
+    name: "PURE"
+    url: "https://www.tu-ilmenau.de/universitaet/fakultaeten/fakultaet-informatik-und-automatisierung/profil/institute-und-fachgebiete/institut-fuer-technische-informatik-und-ingenieurinformatik/fachgebiet-neuroinformatik-und-kognitive-robotik/data-sets-code/pulse-rate-detection-dataset-pure"
+    description: "Pulse rate detection with controlled head motions"
+    modalities: ["rppg"]
+    access: "request_required"
+    
+  cohface:
+    name: "COHFACE"
+    url: "https://www.idiap.ch/en/scientific-research/data/cohface"
+    description: "RGB face videos with HR and breathing rate"
+    modalities: ["rppg", "respiration"]
+    access: "request_required"
+    
+  mmpd:
+    name: "MMPD"
+    url: "https://github.com/thuhci/MMPD_rPPG_Dataset"
+    paper: "https://arxiv.org/abs/2302.03840"
+    description: "Multi-domain MOBILE phone video physiology"
+    modalities: ["rppg"]
+    access: "request_required"
+    
+  rppg_toolbox:
+    name: "rPPG-Toolbox"
+    url: "https://github.com/ubicomplab/rPPG-Toolbox"
+    description: "Unified toolbox with multiple rPPG datasets"
+    modalities: ["rppg"]
+    access: "varies"
+
+phone_sensing:
+  studentlife:
+    name: "StudentLife"
+    url: "https://studentlife.cs.dartmouth.edu/dataset.html"
+    description: "GPS/WiFi location, phone sensing, EMA surveys"
+    modalities: ["gps", "wifi", "accelerometer", "ema"]
+    access: "open"
+    
+  beiwe:
+    name: "Beiwe Sample Datasets"
+    url: "https://zenodo.org/records/1188879"
+    description: "GPS/WiFi/Bluetooth/accelerometer/gyroscope with surveys"
+    modalities: ["gps", "wifi", "bluetooth", "accelerometer", "gyroscope"]
+    access: "open"
+    
+  extrasensory:
+    name: "ExtraSensory"
+    url: "https://extrasensory.ucsd.edu/"
+    description: "Mobile sensors with context labels"
+    modalities: ["accelerometer", "gyroscope", "location", "audio"]
+    access: "open"
+
+har_imu:
+  uci_har:
+    name: "UCI HAR"
+    url: "https://archive.ics.uci.edu/dataset/240/human+activity+recognition+using+smartphones"
+    description: "Smartphone accelerometer/gyroscope, 30 subjects"
+    modalities: ["accelerometer", "gyroscope"]
+    access: "open"
+    
+  wisdm:
+    name: "WISDM"
+    url: "https://archive.ics.uci.edu/dataset/507/wisdm+smartphone+and+smartwatch+activity+and+biometrics+dataset"
+    description: "Smartphone/smartwatch IMU, 51 subjects"
+    modalities: ["accelerometer", "gyroscope"]
+    access: "open"
+    
+  mobiact:
+    name: "MobiAct/MobiFall"
+    url: "https://bmi.hmu.gr/the-mobifall-and-mobiact-datasets-2/"
+    description: "Smartphone accel/gyro for activities and falls"
+    modalities: ["accelerometer", "gyroscope"]
+    access: "open"
+    
+  realworld_har:
+    name: "RealWorld HAR 2016"
+    url: "https://www.uni-mannheim.de/dws/research/projects/activity-recognition/dataset/dataset-realworld/"
+    description: "Multi-sensor including GPS, light, sound level"
+    modalities: ["accelerometer", "gyroscope", "gps", "light", "sound_level"]
+    access: "open"
+
+gait:
+  smartphone_gait_390:
+    name: "Smartphone Gait Recognition Dataset"
+    url: "https://figshare.com/articles/dataset/_b_Smartphone-Based_Gait_Recognition_Dataset_Naturalistic_Walking_Data_from_390_Participants_for_Biometric_Identification_b_/30597743"
+    description: "Naturalistic walking from 390 participants"
+    modalities: ["accelerometer", "gyroscope"]
+    access: "open"
+    
+  fda_gait_metrics:
+    name: "FDA Gait Metrics Accuracy Dataset"
+    url_cdrh: "https://cdrh-rst.fda.gov/open-access-wearables-dataset-evaluate-factors-impacting-accuracy-smartphone-gait-metrics"
+    url_synapse: "https://www.synapse.org/Synapse:syn51664250"
+    description: "Phone placements/orientations with ground truth gait"
+    modalities: ["accelerometer", "gyroscope"]
+    access: "open"
+

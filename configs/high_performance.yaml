@@ -1,0 +1,209 @@
+# ViralFlip High-Performance Configuration
+# ==========================================
+# Optimized for RTX 5070 (12GB VRAM) + Xeon E5-2696 v4 (22 cores)
+# Target: Maximum accuracy and full GPU utilization
+
+# Data settings
+data:
+  bin_hours: 6  # 6-hour bins (4 per day)
+  horizons: [24, 48, 72]  # prediction horizons in hours
+  washout_days: 7  # minimum days between illness episodes
+  baseline_init_days: 14  # days to initialize PBM baseline
+  
+# Feature extraction
+features:
+  voice:
+    sample_rate: 16000
+    n_mfcc: 13  # Increased from 6 for better accuracy
+    min_duration_sec: 3.0  # Lowered to capture more samples
+  cough:
+    confidence_threshold: 0.4  # Lowered for more sensitivity
+    night_start_hour: 0
+    night_end_hour: 6
+  tapping:
+    min_taps: 8
+    duration_sec: 10.0
+  gait:
+    min_steps: 8
+    cadence_bandpass: [0.5, 3.0]  # Hz
+  rppg:
+    hr_bandpass: [0.7, 3.0]  # Hz (42-180 bpm)
+    min_quality: 0.25
+  gps:
+    geohash_precision: 7  # Higher precision
+    home_inference_hours: [0, 6]
+  imu:
+    activity_thresholds: [0.1, 0.5, 1.5]  # m/s^2
+    tremor_band: [4.0, 12.0]  # Hz
+
+# Personal Baseline Memory (PBM) - Fine-tuned
+pbm:
+  alpha: 0.025  # Slightly slower adaptation for stability
+  beta: 0.015
+  safe_risk_threshold: 0.25  # More conservative
+  clip_z: 5.0
+  min_quality: 0.25
+  eps: 1e-7
+
+# Behavior-Drift Debiasing (BDD)
+bdd:
+  ridge_lambda: 0.5  # Lower regularization for more expressiveness
+  behavior_blocks: ["gps", "imu_passive", "screen"]
+  physiology_blocks: ["voice", "cough", "tap", "gait_active", "rppg", "light", "baro"]
+
+# Drift score (phi)
+drift_score:
+  l1_lambda: 0.005  # Reduced sparsity for better feature utilization
+
+# Model architecture - MAXIMUM POWER
+model:
+  # Lag lattice - extended temporal context
+  max_lag_bins: 16  # 16 * 6h = 96h lookback (was 12)
+  
+  # Weights
+  l1_lambda_w: 0.005  # Reduced sparsity
+  nonnegative: true
+  
+  # Interactions - ENABLED for max accuracy
+  use_interactions: true
+  interaction_pairs: [
+    ["voice", "rppg"],
+    ["voice", "cough"],
+    ["rppg", "gait_active"],
+    ["cough", "rppg"],
+    ["voice", "tap"],
+    ["gait_active", "tap"],
+    ["voice", "gait_active"],
+    ["cough", "tap"]
+  ]
+  l1_lambda_g: 0.05  # Moderate sparsity on interactions
+  
+  # Missing data
+  use_missing_indicators: true
+  
+  # Virus Classification - ENABLED
+  # Classifies illness type: COVID, Flu, Cold, RSV, Pneumonia, General Respiratory
+  use_virus_classifier: true
+  virus_classifier:
+    hidden_dim: 128  # Larger hidden layer for better classification
+    dropout: 0.25  # Reduced dropout
+    n_classes: 7  # HEALTHY + 6 illness types
+
+# Personalization - Enhanced
+personalization:
+  enabled: true
+  initial_scale: 1.0
+  initial_bias: 0.0
+  learning_rate: 0.005  # Slower for stability
+  scale_bounds: [0.3, 3.0]  # Wider bounds
+
+# Confidence scoring
+confidence:
+  gamma0: 0.1
+  gamma1: 0.35
+  gamma2: 0.25
+  gamma3: 0.40
+  
+  # Ensemble - ENABLED for uncertainty quantification
+  use_ensemble: true
+  n_ensemble: 5
+
+# Training - GPU Optimized
+training:
+  seed: 42
+  batch_size: 128  # Larger batch for RTX 5070 (12GB VRAM)
+  epochs: 300  # More epochs for convergence
+  learning_rate: 0.0005  # Lower LR for larger batch
+  weight_decay: 5e-6  # Reduced for larger model
+  
+  # Mixed precision - ENABLED
+  use_amp: true  # Automatic mixed precision (FP16)
+  
+  # Loss - Enhanced
+  use_focal_loss: true
+  focal_gamma: 2.5  # Slightly higher focus on hard examples
+  horizon_weights: [1.0, 0.9, 0.75]  # Adjusted weights
+  
+  # Virus classification loss
+  virus_loss_weight: 0.4  # Weight for virus type classification
+  
+  # Early stopping - Patient
+  early_stopping_patience: 30  # More patience
+  early_stopping_metric: "val_auprc_mean"
+  
+  # Class balancing
+  pos_weight_multiplier: 8.0  # Higher for rare events
+  
+  # Gradient accumulation for effective larger batch
+  gradient_accumulation_steps: 2  # Effective batch = 256
+  
+  # Gradient clipping
+  max_grad_norm: 0.5
+  
+  # Learning rate schedule
+  lr_scheduler: "cosine_warmup"  # Better convergence
+  warmup_epochs: 10
+  min_lr: 1e-6
+  
+  # Data loading - Optimized for Xeon
+  num_workers: 8  # Use multiple CPU cores
+  pin_memory: true  # Faster GPU transfer
+  prefetch_factor: 4  # Prefetch batches
+
+# Splits
+splits:
+  # User-level split
+  train_user_frac: 0.75  # More training data
+  val_user_frac: 0.10
+  test_user_frac: 0.15
+  
+  # Temporal split (within user)
+  train_time_frac: 0.75
+  val_time_frac: 0.10
+  test_time_frac: 0.15
+
+# Evaluation
+evaluation:
+  thresholds: [0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.4, 0.5]
+  lead_time_threshold: 0.25
+  calibration_bins: 15
+  
+  # Bootstrap for confidence intervals
+  bootstrap_samples: 1000
+  confidence_level: 0.95
+
+# Paths
+paths:
+  data_dir: "data/"
+  processed_data: "data/processed/"
+  output_dir: "runs/"
+  cache_dir: ".cache/"
+
+# Real Data Settings
+# ViralFlip uses ONLY real health datasets with actual illness labels
+# Run these commands to download and prepare data:
+#   python scripts/download_more_data.py --health --parallel 4
+#   python scripts/prepare_real_data.py
+data_sources:
+  - coughvid        # 25K+ COVID coughs with test results
+  - coswara         # Breathing/cough/voice + COVID labels
+  - virufy          # PCR-confirmed COVID coughs
+  - dicova          # Respiratory illness detection
+  - flusense        # Flu detection from hospital data
+  - sound_dr        # Pneumonia/COVID detection
+
+# GPU Optimization
+gpu:
+  device: "cuda"
+  compile_model: false  # Disabled - torch.compile has issues with dynamic shapes
+  cudnn_benchmark: true  # Optimize cuDNN
+  deterministic: false  # Trade reproducibility for speed
+  
+# Logging
+logging:
+  level: "INFO"
+  tensorboard: true
+  wandb: false  # Set to true if using Weights & Biases
+  log_every_n_steps: 50
+  save_every_n_epochs: 10
+

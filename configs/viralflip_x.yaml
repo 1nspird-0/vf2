@@ -1,0 +1,315 @@
+# ViralFlip-X Configuration
+# ==========================
+# Modern illness prediction with:
+# - Masked multimodal pretraining
+# - IRM environment-invariant learning
+# - Conformalized uncertainty
+# - Change-point aware baselines
+# - Federated learning ready
+# - Active sensing
+
+# Data settings
+data:
+  bin_hours: 6
+  horizons: [24, 48, 72]
+  washout_days: 7
+  baseline_init_days: 14
+
+# Feature extraction (same as base)
+features:
+  voice:
+    sample_rate: 16000
+    n_mfcc: 6
+    min_duration_sec: 5.0
+  cough:
+    confidence_threshold: 0.5
+    night_start_hour: 0
+    night_end_hour: 6
+  tapping:
+    min_taps: 10
+    duration_sec: 10.0
+  gait:
+    min_steps: 10
+    cadence_bandpass: [0.5, 3.0]
+  rppg:
+    hr_bandpass: [0.7, 3.0]
+    min_quality: 0.3
+  gps:
+    geohash_precision: 6
+    home_inference_hours: [0, 6]
+  imu:
+    activity_thresholds: [0.1, 0.5, 1.5]
+    tremor_band: [4.0, 12.0]
+
+# ===== NEW: Self-Supervised Pretraining =====
+pretrain:
+  enabled: true
+  
+  # Model architecture
+  embed_dim: 128
+  encoder_layers: 4
+  decoder_layers: 2
+  n_heads: 4
+  ff_dim: 512
+  patch_size: 1
+  dropout: 0.1
+  
+  # Masking strategy
+  mask_ratio: 0.4
+  temporal_mask_prob: 0.3
+  modality_mask_prob: 0.2
+  contiguous_mask_prob: 0.3
+  min_contiguous_len: 2
+  max_contiguous_len: 6
+  
+  # Training
+  epochs: 100
+  batch_size: 64
+  learning_rate: 1e-4
+  weight_decay: 0.05
+  warmup_epochs: 10
+  min_lr: 1e-6
+  
+  # Data
+  use_unlabeled_data: true
+  unlabeled_data_weight: 1.0
+
+# ===== NEW: IRM / Domain-Invariant Learning =====
+irm:
+  enabled: true
+  
+  # IRM penalty
+  penalty_weight: 1.0
+  anneal_iters: 500
+  
+  # Environment detection
+  n_environments: 4
+  environment_features:
+    - mobility_level  # high/low GPS entropy
+    - temporal_pattern  # weekday/weekend
+    - data_quality  # high/low sensor uptime
+    - activity_level  # sedentary/active
+  
+  # Thresholds for environment assignment
+  mobility_threshold: 0.5
+  quality_threshold: 0.7
+  activity_threshold: 0.3
+  
+  # Domain adversarial (alternative to IRM)
+  use_domain_adversarial: false
+  domain_weight: 0.1
+
+# ===== NEW: Conformal Prediction =====
+conformal:
+  enabled: true
+  
+  # Coverage
+  alpha: 0.1  # 90% coverage
+  
+  # Change-point awareness
+  use_changepoint: true
+  base_window: 100
+  min_window: 20
+  change_threshold: 2.0
+  recovery_rate: 0.05
+  uncertainty_boost: 1.5
+  
+  # Alerting
+  alert_threshold: 0.3
+  require_all_horizons: false
+  min_alert_confidence: 0.5
+
+# ===== NEW: Change-Point Aware Baselines =====
+baseline:
+  type: "changepoint"  # "ema" for original, "changepoint" for new
+  
+  # EMA parameters (shared)
+  alpha: 0.03
+  beta: 0.02
+  safe_risk_threshold: 0.30
+  clip_z: 6.0
+  min_quality: 0.3
+  init_bins: 56
+  
+  # Change-point specific
+  max_banks: 5
+  bank_merge_threshold: 0.5
+  change_sensitivity: 4.0
+  
+  # CUSUM detection
+  cusum_threshold: 4.0
+  page_hinkley_threshold: 50.0
+  min_samples_between_changes: 20
+
+# ===== NEW: Federated Learning =====
+federated:
+  enabled: false  # Set to true for federated training
+  
+  # Server settings
+  aggregation_strategy: "fedavg"  # fedavg, fedprox
+  min_clients_per_round: 2
+  client_fraction: 1.0
+  server_momentum: 0.0
+  
+  # Client settings
+  local_epochs: 5
+  local_batch_size: 32
+  local_learning_rate: 0.01
+  
+  # FedProx
+  proximal_mu: 0.01
+  
+  # Privacy
+  use_differential_privacy: false
+  dp_epsilon: 8.0
+  dp_delta: 1e-5
+  dp_noise_multiplier: 1.0
+  max_grad_norm: 1.0
+  
+  # Personalization
+  personalization_layers: ["personalization"]
+  freeze_encoder: true
+
+# ===== NEW: Active Sensing =====
+active_sensing:
+  enabled: true
+  
+  # Acquisition function
+  acquisition_type: "expected_info_gain"  # expected_info_gain, uncertainty_threshold, bayesian
+  gain_scale: 1.0
+  
+  # Modality burden (0 = no burden, 1 = high burden)
+  modality_burden:
+    rppg: 0.8
+    gait_active: 0.7
+    voice: 0.4
+    cough: 0.3
+    tap: 0.5
+    light: 0.1
+    baro: 0.1
+  
+  # Modality noise (expected variance)
+  modality_noise:
+    rppg: 0.3
+    gait_active: 0.35
+    voice: 0.4
+    cough: 0.5
+    tap: 0.45
+    light: 0.2
+    baro: 0.2
+  
+  # Scheduling
+  uncertainty_threshold: 0.4
+  min_request_interval_seconds: 300
+  max_daily_burden: 5.0
+  max_hourly_requests: 2
+  collection_hours: [7, 22]
+  
+  # Requestable sensors (active tests)
+  requestable_sensors:
+    - rppg
+    - gait_active
+    - voice
+    - cough
+    - tap
+
+# Model architecture (ViralFlip-X specific)
+model:
+  # Use pretrained encoder
+  use_pretrained_encoder: true
+  encoder_embed_dim: 128
+  encoder_layers: 4
+  
+  # Lag lattice
+  max_lag_bins: 12
+  
+  # Weights
+  l1_lambda_drift: 0.01
+  l1_lambda_lattice: 0.01
+  nonnegative: true
+  
+  # Interactions
+  use_interactions: false
+  interaction_pairs: [["voice", "rppg"], ["voice", "cough"], ["rppg", "gait_active"]]
+  l1_lambda_interaction: 0.1
+  
+  # Missing data
+  use_missing_indicators: true
+  
+  # Environment
+  n_environments: 4
+
+# Personalization (same as base)
+personalization:
+  enabled: true
+  initial_scale: 1.0
+  initial_bias: 0.0
+  learning_rate: 0.01
+  scale_bounds: [0.5, 2.0]
+
+# Training
+training:
+  seed: 42
+  batch_size: 32
+  epochs: 100
+  learning_rate: 0.001
+  weight_decay: 1e-5
+  
+  # Loss
+  use_focal_loss: true
+  focal_gamma: 2.0
+  horizon_weights: [1.0, 0.8, 0.6]
+  pos_weight_multiplier: 5.0
+  
+  # IRM loss
+  irm_weight: 1.0
+  
+  # Scheduler
+  lr_scheduler: "cosine_warmup"
+  warmup_epochs: 5
+  min_lr: 1e-7
+  
+  # Early stopping
+  early_stopping_patience: 15
+  early_stopping_metric: "val_auprc_mean"
+  
+  # GPU optimization
+  use_amp: true
+  gradient_accumulation_steps: 1
+  max_grad_norm: 1.0
+  num_workers: 4
+  pin_memory: true
+
+# Splits
+splits:
+  train_user_frac: 0.7
+  val_user_frac: 0.15
+  test_user_frac: 0.15
+  train_time_frac: 0.7
+  val_time_frac: 0.15
+  test_time_frac: 0.15
+
+# Evaluation
+evaluation:
+  thresholds: [0.1, 0.2, 0.3, 0.4, 0.5]
+  lead_time_threshold: 0.3
+  calibration_bins: 10
+  
+  # Conformal evaluation
+  evaluate_conformal_coverage: true
+  evaluate_environment_invariance: true
+
+# Paths
+paths:
+  data_dir: "data/"
+  output_dir: "runs/viralflip_x/"
+  cache_dir: ".cache/"
+  pretrained_encoder: "runs/pretrain/encoder.pt"
+
+# Logging
+logging:
+  tensorboard: true
+  save_every_n_epochs: 10
+  log_conformal_stats: true
+  log_environment_stats: true
+

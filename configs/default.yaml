@@ -1,0 +1,146 @@
+# ViralFlip Configuration
+# =======================
+
+# Data settings
+data:
+  bin_hours: 6  # 6-hour bins (4 per day)
+  horizons: [24, 48, 72]  # prediction horizons in hours
+  washout_days: 7  # minimum days between illness episodes
+  baseline_init_days: 14  # days to initialize PBM baseline
+  
+# Feature extraction
+features:
+  voice:
+    sample_rate: 16000
+    n_mfcc: 6
+    min_duration_sec: 5.0
+  cough:
+    confidence_threshold: 0.5
+    night_start_hour: 0
+    night_end_hour: 6
+  tapping:
+    min_taps: 10
+    duration_sec: 10.0
+  gait:
+    min_steps: 10
+    cadence_bandpass: [0.5, 3.0]  # Hz
+  rppg:
+    hr_bandpass: [0.7, 3.0]  # Hz (42-180 bpm)
+    min_quality: 0.3
+  gps:
+    geohash_precision: 6
+    home_inference_hours: [0, 6]  # night hours for home detection
+  imu:
+    activity_thresholds: [0.1, 0.5, 1.5]  # m/s^2 for low/med/high
+    tremor_band: [4.0, 12.0]  # Hz
+
+# Personal Baseline Memory (PBM)
+pbm:
+  alpha: 0.03  # EMA update rate for mean
+  beta: 0.02   # EMA update rate for variance
+  safe_risk_threshold: 0.30  # max risk to allow baseline update
+  clip_z: 6.0  # z-score clipping
+  min_quality: 0.3  # minimum quality for update
+  eps: 1e-6
+
+# Behavior-Drift Debiasing (BDD)
+bdd:
+  ridge_lambda: 1.0
+  behavior_blocks: ["gps", "imu_passive", "screen"]
+  physiology_blocks: ["voice", "cough", "tap", "gait_active", "rppg", "light", "baro"]
+
+# Drift score (phi)
+drift_score:
+  l1_lambda: 0.01  # sparsity on a_m weights
+
+# Model architecture
+model:
+  # Lag lattice
+  max_lag_bins: 12  # for 6h bins: 12 lags = 72h
+  
+  # Weights
+  l1_lambda_w: 0.01  # sparsity on w weights
+  nonnegative: true  # enforce w >= 0
+  
+  # Interactions (optional)
+  use_interactions: false
+  interaction_pairs: [["voice", "rppg"], ["voice", "cough"], ["rppg", "gait_active"]]
+  l1_lambda_g: 0.1  # heavy sparsity on interaction weights
+  
+  # Missing data
+  use_missing_indicators: true
+
+# Personalization
+personalization:
+  enabled: true
+  initial_scale: 1.0
+  initial_bias: 0.0
+  learning_rate: 0.01
+  scale_bounds: [0.5, 2.0]
+
+# Confidence scoring
+confidence:
+  gamma0: 0.0
+  gamma1: 0.3  # weight for modality presence
+  gamma2: 0.2  # weight for mean quality
+  gamma3: 0.5  # weight for missing rate
+  
+  # Ensemble (optional)
+  use_ensemble: false
+  n_ensemble: 5
+
+# Training
+training:
+  seed: 42
+  batch_size: 32
+  epochs: 100
+  learning_rate: 0.001
+  weight_decay: 1e-5
+  
+  # Loss
+  use_focal_loss: true
+  focal_gamma: 2.0
+  horizon_weights: [1.0, 0.8, 0.6]  # weights for 24/48/72h
+  
+  # Early stopping
+  early_stopping_patience: 15
+  early_stopping_metric: "val_auprc_mean"
+  
+  # Class balancing
+  pos_weight_multiplier: 5.0  # multiply positive class weight
+
+# Splits
+splits:
+  # User-level split
+  train_user_frac: 0.7
+  val_user_frac: 0.15
+  test_user_frac: 0.15
+  
+  # Temporal split (within user)
+  train_time_frac: 0.7
+  val_time_frac: 0.15
+  test_time_frac: 0.15
+
+# Evaluation
+evaluation:
+  thresholds: [0.1, 0.2, 0.3, 0.4, 0.5]
+  lead_time_threshold: 0.3  # risk threshold for lead-time calculation
+  calibration_bins: 10
+
+# Paths
+paths:
+  data_dir: "data/"
+  output_dir: "runs/"
+  cache_dir: ".cache/"
+
+# Synthetic data generation
+synthetic:
+  n_users: 100
+  days_per_user: 90
+  illness_rate: 0.1  # probability of illness episode per 2-week window
+  drift_magnitude: 2.0  # z-score drift before illness
+  drift_onset_hours: 48  # how early drift starts before onset
+  noise_std: 0.3
+  missing_rate: 0.1
+  behavior_confound_strength: 0.5
+

@@ -1,0 +1,22 @@
+datasets_used:
+- flusense
+feature_dim: 30
+n_test: 1754
+n_train: 8181
+n_val: 1753
+virus_counts:
+  COLD: 0
+  COVID: 0
+  FLU: 11688
+  GENERAL: 0
+  HEALTHY: 0
+  PNEUMONIA: 0
+  RSV: 0
+virus_types:
+- HEALTHY
+- COVID
+- FLU
+- COLD
+- RSV
+- PNEUMONIA
+- GENERAL
