@@ -1,0 +1,4 @@
+[console_scripts]
+viralflip-ablations = viralflip.scripts.run_ablations:main
+viralflip-evaluate = viralflip.scripts.evaluate:main
+viralflip-train = viralflip.scripts.train:main

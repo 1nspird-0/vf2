@@ -1,0 +1,345 @@
+Metadata-Version: 2.4
+Name: viralflip
+Version: 0.1.0
+Summary: Predictive illness onset forecasting using phone sensor data
+Author: ViralFlip Team
+License: MIT
+Keywords: health,prediction,machine-learning,sensors,forecasting
+Classifier: Development Status :: 3 - Alpha
+Classifier: Intended Audience :: Science/Research
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Programming Language :: Python :: 3.11
+Classifier: Programming Language :: Python :: 3.12
+Classifier: Topic :: Scientific/Engineering :: Artificial Intelligence
+Requires-Python: >=3.11
+Description-Content-Type: text/markdown
+Requires-Dist: numpy>=1.24.0
+Requires-Dist: pandas>=2.0.0
+Requires-Dist: scipy>=1.11.0
+Requires-Dist: scikit-learn>=1.3.0
+Requires-Dist: torch>=2.0.0
+Requires-Dist: pyyaml>=6.0
+Requires-Dist: librosa>=0.10.0
+Requires-Dist: tqdm>=4.65.0
+Requires-Dist: matplotlib>=3.7.0
+Requires-Dist: seaborn>=0.12.0
+Provides-Extra: dev
+Requires-Dist: pytest>=7.4.0; extra == "dev"
+Requires-Dist: pytest-cov>=4.1.0; extra == "dev"
+Requires-Dist: black>=23.0.0; extra == "dev"
+Requires-Dist: ruff>=0.1.0; extra == "dev"
+Requires-Dist: mypy>=1.5.0; extra == "dev"
+
+# ViralFlip
+
+**Predict Viral Illness 24-72 Hours Before Symptoms Using Phone Sensors**
+
+<p align="center">
+  <img src="https://img.shields.io/badge/Python-3.11+-blue.svg" alt="Python">
+  <img src="https://img.shields.io/badge/PyTorch-2.0+-red.svg" alt="PyTorch">
+  <img src="https://img.shields.io/badge/License-MIT-green.svg" alt="License">
+  <img src="https://img.shields.io/badge/Data-Real%20Health%20Datasets-purple.svg" alt="Data">
+</p>
+
+> ⚠️ **SAFETY DISCLAIMER**: This is a research tool, NOT a medical device. Do not use for clinical decision-making.
+
+---
+
+## What ViralFlip Does
+
+ViralFlip detects **pre-symptomatic illness** by analyzing subtle changes in your phone sensor data:
+
+| Output | Description |
+|--------|-------------|
+| **24h Risk** | Probability of illness onset in next 24 hours |
+| **48h Risk** | Probability of illness onset in next 48 hours |
+| **72h Risk** | Probability of illness onset in next 72 hours |
+| **Virus Type** | Classification: COVID, Flu, Cold, RSV, Pneumonia, or General |
+| **Confidence** | How confident the model is in its prediction |
+
+### Example Prediction
+
+```python
+{
+    "risks": {24: 0.42, 48: 0.65, 72: 0.78},
+    "virus_prediction": "Influenza",
+    "virus_confidence": 0.73,
+    "drift_scores": {"voice": 1.8, "cough": 2.1, "rppg": 1.5}
+}
+# Interpretation: 78% chance of flu in 72h, detected via voice/cough changes
+```
+
+---
+
+## Key Features
+
+| Feature | Description |
+|---------|-------------|
+| 🦠 **Virus Classification** | Identifies COVID, Flu, Cold, RSV, Pneumonia, General Respiratory |
+| 📱 **Passive Sensing** | Uses voice, cough, heart rate, gait, activity from phone sensors |
+| 🧬 **Personal Baselines** | Learns what's "normal" for YOU, detects deviations |
+| 🛡️ **Behavior Debiasing** | Removes false signals from travel, sleep changes, etc. |
+| ⚡ **GPU Optimized** | Mixed precision, gradient accumulation for fast training |
+| 🔬 **Real Data Only** | Trained on actual health datasets with verified illness labels |
+
+---
+
+## Quick Start
+
+### Prerequisites
+
+- Python 3.11+
+- CUDA GPU recommended (RTX 3060+ or cloud GPU)
+- ~10GB disk space for datasets
+
+### Installation
+
+```bash
+git clone https://github.com/your-org/viralflip.git
+cd viralflip
+
+# Create virtual environment
+python -m venv venv
+source venv/bin/activate  # Windows: venv\Scripts\activate
+
+# Install
+pip install -e ".[dev]"
+```
+
+### Train the Model (One Command)
+
+```bash
+python scripts/train_max_accuracy.py
+```
+
+This will:
+1. ✅ Download real health datasets (~5GB)
+2. ✅ Extract audio features (MFCCs, spectral)
+3. ✅ Train with optimized GPU settings
+4. ✅ Save the best model
+
+### Or Step-by-Step
+
+```bash
+# Step 1: Download real health datasets
+python scripts/download_more_data.py --health --parallel 4
+
+# Step 2: Prepare data for training
+python scripts/prepare_real_data.py
+
+# Step 3: Train the model
+python scripts/train.py --max-accuracy
+```
+
+---
+
+## Real Health Datasets
+
+ViralFlip trains on **real data with verified illness labels** - no synthetic data!
+
+| Dataset | Samples | Labels | Description |
+|---------|---------|--------|-------------|
+| **COUGHVID** | 25,000+ | COVID | Coughs with PCR test results |
+| **Coswara** | 10,000+ | COVID | Breathing, cough, voice recordings |
+| **Virufy** | 1,500+ | COVID | PCR-confirmed COVID coughs |
+| **DiCOVA** | 2,000+ | COVID/Resp | Respiratory illness challenge data |
+| **FluSense** | 5,000+ | Flu | Hospital waiting room audio |
+| **Sound-Dr** | 1,000+ | Pneumonia | Respiratory sound analysis |
+
+### Download Health Datasets
+
+```bash
+# Download all health datasets
+python scripts/download_more_data.py --health --parallel 4
+
+# List available datasets
+python scripts/download_more_data.py --list
+
+# Download specific dataset
+python scripts/download_more_data.py --dataset coughvid
+```
+
+---
+
+## Virus Types Detected
+
+| Virus | Key Signals | Typical Onset |
+|-------|-------------|---------------|
+| **COVID-19** | Voice changes, dry cough, elevated HR | 48h gradual |
+| **Influenza** | High fever (HR spike), fatigue, muscle aches | 12h rapid |
+| **Common Cold** | Nasal voice, mild cough | 36h gradual |
+| **RSV** | Wheezing cough, respiratory distress | 24h moderate |
+| **Pneumonia** | Severe cough, high HR, significant fatigue | 48h gradual |
+| **General** | Mixed respiratory symptoms | Variable |
+
+---
+
+## Model Architecture
+
+```
+Phone Sensors → Feature Extraction → Personal Baseline Memory
+                                            ↓
+                                    Drift Score (φ)
+                                            ↓
+                              Behavior-Drift Debiasing
+                                            ↓
+                                    Lag-Lattice Model
+                                     ↙           ↘
+                            Risk Prediction    Virus Classifier
+                            (24/48/72h)        (7 classes)
+```
+
+### Components
+
+| Component | Purpose |
+|-----------|---------|
+| **Personal Baseline Memory (PBM)** | Tracks your individual "healthy" baseline |
+| **Behavior-Drift Debiasing (BDD)** | Removes confounds from travel, sleep changes |
+| **Lag-Lattice Hazard Model** | Multi-horizon prediction with temporal structure |
+| **Interaction Module** | Captures modality correlations (voice+cough, etc.) |
+| **Virus Classifier** | MLP head for illness type classification |
+
+---
+
+## Configuration
+
+High-performance config for GPU training (`configs/high_performance.yaml`):
+
+```yaml
+training:
+  batch_size: 128
+  gradient_accumulation_steps: 2  # Effective batch = 256
+  epochs: 300
+  learning_rate: 0.0005
+  use_amp: true  # Mixed precision (FP16)
+
+model:
+  max_lag_bins: 16  # 96h lookback
+  use_interactions: true
+  use_virus_classifier: true
+  virus_classifier:
+    hidden_dim: 128
+    n_classes: 7  # HEALTHY + 6 illness types
+
+data:
+  horizons: [24, 48, 72]  # Prediction windows
+```
+
+---
+
+## Project Structure
+
+```
+viralflip/
+├── configs/
+│   └── high_performance.yaml    # GPU-optimized training config
+├── src/viralflip/
+│   ├── data/
+│   │   ├── real_data_loader.py  # Loads health datasets
+│   │   └── dataset.py           # PyTorch dataset
+│   ├── model/
+│   │   ├── viralflip_model.py   # Main model with virus classifier
+│   │   ├── virus_types.py       # Virus type definitions
+│   │   ├── drift_score.py       # Drift score compression
+│   │   └── lag_lattice.py       # Multi-horizon hazard model
+│   ├── train/
+│   │   ├── trainer.py           # Training loop with multi-task loss
+│   │   ├── losses.py            # Focal loss + virus classification
+│   │   └── build_sequences.py   # Sequence construction
+│   ├── features/                # Feature extractors per modality
+│   ├── baseline/                # Personal Baseline Memory
+│   ├── debias/                  # Behavior-Drift Debiasing
+│   └── eval/                    # Metrics, calibration
+├── scripts/
+│   ├── train_max_accuracy.py    # One-command training pipeline
+│   ├── train.py                 # Main training script
+│   ├── prepare_real_data.py     # Process downloaded datasets
+│   └── download_more_data.py    # Download health datasets
+└── data/
+    └── processed/               # Training-ready data
+```
+
+---
+
+## GPU Requirements
+
+| GPU | VRAM | Batch Size | Training Time |
+|-----|------|------------|---------------|
+| RTX 3060 | 12GB | 64 | ~4 hours |
+| RTX 3080 | 10GB | 96 | ~2.5 hours |
+| RTX 4090 | 24GB | 256 | ~1 hour |
+| RTX 5070 | 12GB | 128 | ~2 hours |
+| A100 | 40GB | 512 | ~30 min |
+
+For cloud training, we recommend [Vast.ai](https://vast.ai) or [Lambda Labs](https://lambdalabs.com).
+
+---
+
+## Evaluation Metrics
+
+| Metric | Target | Description |
+|--------|--------|-------------|
+| **AUPRC** | >0.70 | Area under precision-recall curve |
+| **AUROC** | >0.85 | Area under ROC curve |
+| **Virus Accuracy** | >60% | Correct virus type classification |
+| **Lead Time** | >24h | Early warning before symptoms |
+
+---
+
+## API Usage
+
+```python
+from viralflip.model import ViralFlipModel, VirusType, VIRUS_NAMES
+import torch
+
+# Load trained model
+model = ViralFlipModel(
+    feature_dims={"voice": 30, "cough": 30, "rppg": 5},
+    use_virus_classifier=True,
+)
+model.load_state_dict(torch.load("runs/best_model.pt")["model_state_dict"])
+model.eval()
+
+# Make prediction
+output = model.predict_single(
+    drift_dict={"voice": voice_features, "cough": cough_features},
+    quality_scores={"voice": 0.9, "cough": 0.8},
+)
+
+print(f"72h Risk: {output.risks[72]:.1%}")
+print(f"Likely illness: {output.virus_prediction}")
+print(f"Confidence: {output.virus_confidence:.1%}")
+```
+
+---
+
+## Running Tests
+
+```bash
+pytest tests/ -v
+pytest tests/ --cov=src/viralflip --cov-report=html
+```
+
+---
+
+## Citation
+
+```bibtex
+@software{viralflip2024,
+  title={ViralFlip: Predictive Viral Illness Forecasting with Phone Sensors},
+  year={2024},
+  url={https://github.com/your-org/viralflip}
+}
+```
+
+---
+
+## License
+
+MIT License - see LICENSE file.
+
+---
+
+## Acknowledgments
+
+Built on research in mobile health sensing and digital biomarkers. Thanks to the creators of COUGHVID, Coswara, Virufy, DiCOVA, FluSense, and other public health datasets that make this research possible.
